@@ -1,13 +1,15 @@
 // Variables
+let calculatorState = {
+    currentOperand: "",
+    prevOperand: "",
+    operator: "",
+    result: null
+  };
 
-let operator = "";
-let result = 0;
-let currentOperand = "";
-let prevOperand = "";
 
 // DOM Manipulation
 
-var calculatorInput = document.getElementById("calculator-input");
+let calculatorInput = document.getElementById("calculator-input");
 
 const digitButtons = document.querySelectorAll(".digit");
 
@@ -17,6 +19,57 @@ const resultField = document.getElementById("result");
 
 const deleteButton = document.getElementById("delete-button");
 
+// Buttons
+
+deleteButton.addEventListener("click", function (event) {
+  event.preventDefault();
+  currentOperand = "";
+  prevOperand = "";
+  operator = "";
+  document.getElementById("operator").textContent = "";
+  resultField.textContent = "";
+  updateCalculatorDisplay();
+});
+
+submitButton.addEventListener("click", function (event) {
+  event.preventDefault(); // Prevent form from reloading the page
+  operate();
+});
+
+digitButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const digitValue = button.textContent;
+    if (result) {
+      result = "";
+      updateCalculatorDisplay();
+    }
+
+    if (!operator) {
+      currentOperand += digitValue;
+    } else {
+      prevOperand += digitValue;
+    }
+    // Add digit
+    updateCalculatorDisplay();
+  });
+});
+
+const operatorButtons = document.querySelectorAll(".operator");
+// Operator Buttons
+operatorButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    if (prevOperand && currentOperand) {
+      operate();
+    }
+
+    // set the current result to the previous result
+    const operatorValue = button.textContent;
+    operator = operatorValue;
+    updateCalculatorDisplay();
+  });
+});
+
+// Functions
 function updateCalculatorDisplay() {
   if (result) {
     resultField.textContent = `Heres the result of ${prevOperand} ${operator} ${currentOperand} -=> ${result}`;
@@ -33,28 +86,10 @@ function updateCalculatorDisplay() {
   }
 }
 
-// Delete Button
-deleteButton.addEventListener("click", function (event) {
-  event.preventDefault();
-  currentOperand = "";
-  prevOperand = "";
-  operator = "";
-  document.getElementById("operator").textContent = "";
-  resultField.textContent = "";
-  updateCalculatorDisplay();
-});
-
-// Submit Button
-submitButton.addEventListener("click", function (event) {
+function operate() {
   if (!operator) {
-    return 0;
+    return alert('No operator');
   }
-  event.preventDefault(); // Prevent form from reloading the page
-  console.log("Submit button pressed");
-  console.log("Current Result: ", currentOperand);
-  console.log("Previous Result: ", prevOperand);
-  console.log("Operator: ", operator);
-
   // operator if operations
   if (operator === "+") {
     result = add(prevOperand, currentOperand); // Call the add function with the recorded vlaues
@@ -72,44 +107,9 @@ submitButton.addEventListener("click", function (event) {
   operator = "";
   currentOperand = "";
   prevOperand = "";
-});
-
-// Digit Buttons
-digitButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    const digitValue = button.textContent;
-    if (result) {
-        result = ""
-        updateCalculatorDisplay();
-
-/*         resultField.textContent = ""; // reset result
- */    }
-
-    if (!operator) {
-      currentOperand += digitValue;
-    } else {
-      prevOperand += digitValue;
-    }
-    // Add digit
-    updateCalculatorDisplay();
-  });
-});
-
-const operatorButtons = document.querySelectorAll(".operator");
-// Operator Buttons
-operatorButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    // set the current result to the previous result
-    const operatorValue = button.textContent;
-    operator = operatorValue;
-    console.log(operator);
-    updateCalculatorDisplay();
-    console.log(prevOperand, "this is the prev result atm");
-  });
-});
+}
 
 // Math Functions
-
 function add(first, second) {
   let total = parseInt(first) + parseInt(second);
   return total;
@@ -123,12 +123,12 @@ function multiply(first, second) {
 }
 
 function divide(first, second) {
-  if (first || second === 0) {
+/*   if (first || second === 0) {
     alert("Thats an invalid operation");
     currentOperand = "";
     prevOperand = "";
     operator = "";
     return;
-  }
-  return parseInt(first) / parseInt(second);
+  } */
+  return parseFloat(first) / parseFloat(second);
 }
