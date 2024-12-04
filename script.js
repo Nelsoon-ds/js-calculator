@@ -1,11 +1,10 @@
 // Variables
 let calculatorState = {
-    currentOperand: "",
-    prevOperand: "",
-    operator: "",
-    result: null
-  };
-
+  currentOperand: "",
+  prevOperand: "",
+  operator: "",
+  result: null,
+};
 
 // DOM Manipulation
 
@@ -19,116 +18,134 @@ const resultField = document.getElementById("result");
 
 const deleteButton = document.getElementById("delete-button");
 
+let operatorButtons = document.querySelectorAll(".operator");
+
 // Buttons
 
-deleteButton.addEventListener("click", function (event) {
-  event.preventDefault();
-  currentOperand = "";
-  prevOperand = "";
-  operator = "";
-  document.getElementById("operator").textContent = "";
-  resultField.textContent = "";
-  updateCalculatorDisplay();
+deleteButton.addEventListener("click", () => {
+  resetCalculator();
 });
 
 submitButton.addEventListener("click", function (event) {
   event.preventDefault(); // Prevent form from reloading the page
-  operate();
+  if (
+    calculatorState.operator &&
+    calculatorState.prevOperand &&
+    calculatorState.currentOperand
+  ) {
+    operate();
+  }
 });
 
 digitButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    const digitValue = button.textContent;
-    if (result) {
-      result = "";
-      updateCalculatorDisplay();
-    }
-
-    if (!operator) {
-      currentOperand += digitValue;
-    } else {
-      prevOperand += digitValue;
-    }
-    // Add digit
-    updateCalculatorDisplay();
+    handleDigitInput(button.textContent);
   });
 });
 
-const operatorButtons = document.querySelectorAll(".operator");
-// Operator Buttons
 operatorButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    if (prevOperand && currentOperand) {
-      operate();
-    }
-
-    // set the current result to the previous result
-    const operatorValue = button.textContent;
-    operator = operatorValue;
-    updateCalculatorDisplay();
+    console.log(button.textContent);
+    handleOperatorInput(button.textContent);
   });
 });
 
 // Functions
 function updateCalculatorDisplay() {
-  if (result) {
-    resultField.textContent = `Heres the result of ${prevOperand} ${operator} ${currentOperand} -=> ${result}`;
+  const { currentOperand, prevOperand, operator, result } = calculatorState;
+
+  if (result !== null) {
+   calculatorInput.textContent = result;
   } else {
-    resultField.textContent = "";
+    if (!operator) {
+      calculatorInput.textContent = currentOperand;
+      resultField.textContent = '';
+    } else if (!currentOperand) {
+        calculatorInput.textContent = `${prevOperand} ${operator}`;
+      } else {
+        calculatorInput.textContent = `${prevOperand} ${operator} ${currentOperand}`;
+      }
   }
-  if (!operator) {
-    calculatorInput.textContent = currentOperand;
-  } else if (!prevOperand) {
-    calculatorInput.textContent = `${currentOperand} ${operator}`;
-  } else if (prevOperand && currentOperand) {
-    // operator and second number selected
-    calculatorInput.textContent = `${currentOperand} ${operator} ${prevOperand}`;
+}
+
+function handleDigitInput(digit) {
+    const { operator, result } = calculatorState;
+    if (result !== null) {
+      // Start a new calculation after showing the result
+      resetCalculator(false);
+      calculatorState.currentOperand = digit;
+      calculatorState.result = null; // Clear the result for a new input
+    } else if (!operator) {
+      // If no operator, build first number
+      calculatorState.currentOperand += digit;
+    } else {
+      // If operator exists, build second number
+      calculatorState.currentOperand += digit;
+    }
+     
+    updateCalculatorDisplay();
+ }
+
+function handleOperatorInput(operator) {
+  const { currentOperand, prevOperand, result } = calculatorState;
+  if (result !== null) {
+    calculatorState.prevOperand = result;
+    calculatorState.currentOperand = "";
   }
+  if (prevOperand && currentOperand) {
+    operate(); // Perform the operation before switching
+  }
+
+  calculatorState.operator = operator;
+  // If no previous operand, use current operand or result
+  calculatorState.prevOperand =
+    calculatorState.prevOperand ||
+    calculatorState.currentOperand ||
+    result
+  calculatorState.currentOperand = "";
+  updateCalculatorDisplay();
 }
 
 function operate() {
-  if (!operator) {
-    return alert('No operator');
+  const { operator, currentOperand, prevOperand } = calculatorState;
+
+  if (!operator || !prevOperand || !currentOperand) return;
+
+  let result;
+  const num1 = parseFloat(prevOperand);
+  const num2 = parseFloat(currentOperand);
+
+  switch (operator) {
+    case "+":
+      result = num1 + num2;
+      break;
+    case "-":
+      result = num1 - num2;
+      break;
+    case "*":
+      result = num1 * num2;
+      break;
+    case "/":
+      if (num2 === 0) {
+        alert("Cannot divide by zero");
+        resetCalculator();
+        return;
+      }
+      result = num1 / num2;
+      break;
   }
-  // operator if operations
-  if (operator === "+") {
-    result = add(prevOperand, currentOperand); // Call the add function with the recorded vlaues
-  } else if (operator === "-") {
-    result = subtract(prevOperand, currentOperand);
-  } else if (operator === "*") {
-    result = multiply(prevOperand, currentOperand);
-  } else if (operator === "/") {
-    result = divide(prevOperand, currentOperand);
-  }
-  // Update the display to reflect the operation
+  calculatorState.result = result;
+  calculatorState.prevOperand = "";
+  calculatorState.currentOperand = "";
+  calculatorState.operator = "";
+
   updateCalculatorDisplay();
-
-  // Reset for next operation
-  operator = "";
-  currentOperand = "";
-  prevOperand = "";
 }
 
-// Math Functions
-function add(first, second) {
-  let total = parseInt(first) + parseInt(second);
-  return total;
-}
-function subtract(first, second) {
-  return parseInt(first) - parseInt(second);
-}
-
-function multiply(first, second) {
-  return parseInt(first) * parseInt(second);
-}
-
-function divide(first, second) {
-/*   if (first || second === 0) {
-    alert("Thats an invalid operation");
-    currentOperand = "";
-    prevOperand = "";
-    operator = "";
-    return;
-  } */
-  return parseFloat(first) / parseFloat(second);
+function resetCalculator(clearResult = true) {
+  calculatorState.currentOperand = "";
+  calculatorState.prevOperand = "";
+  calculatorState.operator = "";
+  if (clearResult) calculatorState.result = null;
+  updateCalculatorDisplay();
 }
