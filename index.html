@@ -1,15 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Calculator</title>
-</head>
-<body>
-    <div class="container">
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="title">
         <h1>Calculator App</h1>
-        <p>Description of the app</p>
     </div>
+        <div class="display-container">
+          <p id="calculator-input"></p>
+          <p id="operator"></p>
+          <p id="result"></p>
+        </div>
+
+
+        <div class="button-display">
+          <button class="digit">0</button>
+          <button class="digit">1</button>
+          <button class="digit">2</button>
+          <button class="digit">3</button>
+          <button class="digit">4</button>
+          <button class="digit">5</button>
+          <button class="digit">6</button>
+          <button class="digit">7</button>
+          <button class="digit">8</button>
+          <button class="digit">9</button>
+        <div class="operators">
+          <button class="operator">+</button>
+          <button class="operator">-</button>
+          <button class="operator">*</button>
+          <button class="operator">/</button>
+        </div>
+        <button type="submit" id="submit-button">Submit</button>
+        <button id="delete-button">DEL</button>
+      </div>
+     </div>
+    
     <script src="script.js"></script>
-</body>
+  </body>
 </html>
