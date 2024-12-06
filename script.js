@@ -149,3 +149,26 @@ function resetCalculator(clearResult = true) {
   if (clearResult) calculatorState.result = null;
   updateCalculatorDisplay();
 }
+
+function foo() {
+  var something = "cool";
+  var another = [1, 2, 3];
+  function doSomething() {
+    console.log(something);
+  }
+  function doAnother() {
+    console.log(another.join(" ! "));
+  }
+}
+
+
+function myFunc() {
+for (var i=1; i<=5; i++) {
+ (function(){
+ var j = i;
+ setTimeout( function timer(){
+ console.log( j );
+ }, j*1000 );
+ })();
+ }}
+
