@@ -4,7 +4,18 @@ let calculatorState = {
   prevOperand: "",
   operator: "",
   result: null,
+  chainedResult: null,
 };
+
+let equalsHasBeenPressed = false; // Flag for submit-button
+
+const operations = {
+  "+": (a, b) => a + b,
+  "-": (a, b) => a - b,
+  "*": (a, b) => a * b,
+  "/": (a, b) => (b !== 0 ? a / b : null),
+};
+
 
 // DOM Manipulation
 
@@ -12,33 +23,38 @@ let calculatorInput = document.getElementById("calculator-input");
 
 const digitButtons = document.querySelectorAll(".digit");
 
-const submitButton = document.getElementById("submit-button");
+const equalsButton = document.getElementById("equals-button");
 
 const resultField = document.getElementById("result");
 
 const deleteButton = document.getElementById("delete-button");
 
-let operatorButtons = document.querySelectorAll(".operator");
+const operatorButtons = document.querySelectorAll(".operator");
 
-// Buttons
+// Buttons and Event Listeners
 
 deleteButton.addEventListener("click", () => {
-  resetCalculator();
+  resetCalculator(true, true); // All Clear
 });
 
-submitButton.addEventListener("click", function (event) {
-  event.preventDefault(); // Prevent form from reloading the page
+equalsButton.addEventListener("click", function (event) {
+  console.log("Equals has been pressed");
+  equalsHasBeenPressed = true;
+  event.preventDefault(); // Prevent reloading the page
   if (
     calculatorState.operator &&
     calculatorState.prevOperand &&
     calculatorState.currentOperand
   ) {
     operate();
+  } else {
+    handleError("You are missing an operand");
   }
 });
 
 digitButtons.forEach((button) => {
   button.addEventListener("click", () => {
+    console.log(button.textContent, "has been clicked");
     handleDigitInput(button.textContent);
   });
 });
@@ -51,46 +67,49 @@ operatorButtons.forEach((button) => {
 });
 
 // Functions
+
+function handleError(message) {
+  alert(message);
+}
+
 function updateCalculatorDisplay() {
-  const { currentOperand, prevOperand, operator, result } = calculatorState;
+  const { currentOperand, prevOperand, operator, result, chainedResult } =
+    calculatorState;
 
   if (result !== null) {
-   calculatorInput.textContent = result;
+    // Show the result if it exists
+    calculatorInput.textContent = result;
+    resultField.textContent =
+      chainedResult !== null ? `Running total: ${chainedResult}` : "";
   } else {
+    // Construct the display based on the current state
     if (!operator) {
-      calculatorInput.textContent = currentOperand;
-      resultField.textContent = '';
-    } else if (!currentOperand) {
-        calculatorInput.textContent = `${prevOperand} ${operator}`;
-      } else {
-        calculatorInput.textContent = `${prevOperand} ${operator} ${currentOperand}`;
-      }
+      calculatorInput.textContent = currentOperand || prevOperand || "0";
+    } else {
+      calculatorInput.textContent = prevOperand
+        ? `${prevOperand} ${operator} ${currentOperand || ""}`
+        : currentOperand || "";
+    }
   }
 }
 
 function handleDigitInput(digit) {
-    const { operator, result } = calculatorState;
-    if (result !== null) {
-      // Start a new calculation after showing the result
-      resetCalculator(false);
-      calculatorState.currentOperand = digit;
-      calculatorState.result = null; // Clear the result for a new input
-    } else if (!operator) {
-      // If no operator, build first number
-      calculatorState.currentOperand += digit;
-    } else {
-      // If operator exists, build second number
-      calculatorState.currentOperand += digit;
-    }
-     
-    updateCalculatorDisplay();
- }
+  const { result } = calculatorState;
+  if (result !== null && !calculatorState.operator) {
+    // When a result exists, use the chainedResult as the new prevOperand
+    resetCalculator(false, true); // Keep the chained result
+  }
+  calculatorState.currentOperand += digit;
+  updateCalculatorDisplay();
+}
 
 function handleOperatorInput(operator) {
   const { currentOperand, prevOperand, result } = calculatorState;
-  if (result !== null) {
+  // start fresh if a result exists and no operator is active
+  if (result !== null && !currentOperand) {
     calculatorState.prevOperand = result;
     calculatorState.currentOperand = "";
+    calculatorState.operator = "";
   }
   if (prevOperand && currentOperand) {
     operate(); // Perform the operation before switching
@@ -99,76 +118,52 @@ function handleOperatorInput(operator) {
   calculatorState.operator = operator;
   // If no previous operand, use current operand or result
   calculatorState.prevOperand =
-    calculatorState.prevOperand ||
-    calculatorState.currentOperand ||
-    result
+    calculatorState.prevOperand || calculatorState.currentOperand || result;
   calculatorState.currentOperand = "";
   updateCalculatorDisplay();
 }
 
 function operate() {
+  console.log("Ive been called");
   const { operator, currentOperand, prevOperand } = calculatorState;
 
-  if (!operator || !prevOperand || !currentOperand) return;
-
-  let result;
+  if (!operator || !prevOperand || currentOperand === "") {
+    console.log("Invalid operation");
+    return;
+  }
   const num1 = parseFloat(prevOperand);
   const num2 = parseFloat(currentOperand);
+  let result = operations[operator](num1, num2);
 
-  switch (operator) {
-    case "+":
-      result = num1 + num2;
-      break;
-    case "-":
-      result = num1 - num2;
-      break;
-    case "*":
-      result = num1 * num2;
-      break;
-    case "/":
-      if (num2 === 0) {
-        alert("Cannot divide by zero");
-        resetCalculator();
-        return;
-      }
-      result = num1 / num2;
-      break;
+  if (result === null) {
+    handleError("Cannot divide by zero");
+    resetCalculator(true, false);
+    return;
   }
+  if (equalsHasBeenPressed) {
+    calculatorState.chainedResult =
+      (calculatorState.chainedResult || 0) + result;
+  }
+
   calculatorState.result = result;
-  calculatorState.prevOperand = "";
+  calculatorState.prevOperand = result;
   calculatorState.currentOperand = "";
   calculatorState.operator = "";
 
   updateCalculatorDisplay();
 }
 
-function resetCalculator(clearResult = true) {
+function resetCalculator(clearResult = true, keepChainedResult = false) {
+  if (clearResult) {
+    calculatorState.result = null;
+  }
   calculatorState.currentOperand = "";
   calculatorState.prevOperand = "";
   calculatorState.operator = "";
-  if (clearResult) calculatorState.result = null;
+  if (!keepChainedResult) {
+    calculatorState.chainedResult = null;
+  }
+  resultField.textContent = "";
+  equalsHasBeenPressed = false; // Reset flag
   updateCalculatorDisplay();
 }
-
-function foo() {
-  var something = "cool";
-  var another = [1, 2, 3];
-  function doSomething() {
-    console.log(something);
-  }
-  function doAnother() {
-    console.log(another.join(" ! "));
-  }
-}
-
-
-function myFunc() {
-for (var i=1; i<=5; i++) {
- (function(){
- var j = i;
- setTimeout( function timer(){
- console.log( j );
- }, j*1000 );
- })();
- }}
-
