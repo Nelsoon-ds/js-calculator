@@ -34,7 +34,7 @@ const operatorButtons = document.querySelectorAll(".operator");
 // Buttons and Event Listeners
 
 deleteButton.addEventListener("click", () => {
-  resetCalculator(true, true); // All Clear
+  resetCalculator(true, false); // All Clear
 });
 
 equalsButton.addEventListener("click", function (event) {
